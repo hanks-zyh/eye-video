@@ -1,32 +1,36 @@
 <template>
-    <div class="container">
-       <div class="video-main mdl-shadow--2dp">
-           <div class="video-player">
-               <div class="video-playing">
-                 <video controls poster="{{ currentVideo ? currentVideo.coverForFeed : '#' }}">
-                   <source  src="{{ currentVideo ? currentVideo.playUrl : '#' }}" >
-               </video>
-               </div>
-               <div class="video-info">
-                   <h1>{{ currentVideo ?  currentVideo.title : 'title' }}</h1>
-                   <p>{{ currentVideo ?  currentVideo.description : 'des' }}</p>
-                   <div>{{ currentVideo ? currentVideo.category: 'TAG' }}</div>
-               </div>
-           </div>
-           <div class="video-list">
-               <ul class="video-ul">
-                   <li v-for="video in videoList">
-                       <div class="title">
-                         <span>{{ video.title }}</span>
-                       </div>
-                       <a href="#" v-on:click="changeCurrentVideo($index)">
-                         <img src="{{ video.coverForFeed }}" alt="img">
-                      </a>
-                   </li>
-               </ul>
-           </div>
-       </div>
-   </div>
+  <div class="container">
+    <div class="video-main mdl-shadow--2dp">
+      <div class="video-player">
+        <div class="video-playing">
+          <video id="videoPlayer" style="background-image: url({{ currentVideo ? currentVideo.coverForFeed : '#' }});" controls poster="1.jpg">
+            <source id="videoSource" src="" >
+          </video>
+        </div>
+        <div class="video-info">
+          <h1>{{ currentVideo ?  currentVideo.title : 'title' }}</h1>
+          <p>{{ currentVideo ?  currentVideo.description : 'des' }}</p>
+      </div>
+      </div>
+      <div class="video-list">
+        <div class="page-control">
+          <button class="page-button" v-on:click="prePage">上一页</button>
+          <button class="page-button" v-on:click="nextPage">下一页</button>
+        </div>
+        <ul class="video-ul">
+          <li v-for="video in videoList">
+            <div class="title">
+              <span>{{ video.title }}</span>
+            </div>
+            <a href="#" v-on:click="changeCurrentVideo($index)">
+              <img :src="video.coverForFeed" alt="img">
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <a href="https://github.com/hanks-zyh/eye-video"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
 </template>
 
 <script>
@@ -37,10 +41,11 @@ export default{
   data () {
     return {
       url: 'http://baobab.wandoujia.com/api/v1/feed',
-      nextPageUrl: '',
       videoList: [],
       currentVideo: null,
-      date: 0
+      date: 0,
+      nextPageUrl: '',
+      pageList: []
     }
   },
   ready () {
@@ -50,13 +55,16 @@ export default{
     getData (url) {
       this.$http.get(url).then((response) => {
         var json = JSON.parse(response.body)
+        this.pageList.push(url)
         this.nextPageUrl = json.nextPageUrl
         var list = json.dailyList
         if (list.length > 0) {
           this.date = list[0].date
           var videoList = list[0].videoList
           if (videoList.length > 0) {
+            this.videoList.length = 0
             this.currentVideo = videoList[0]
+            this.reloadVideoSource(this.currentVideo.playUrl)
           }
           for (var i = 0; i < videoList.length; i++) {
             this.videoList.push(videoList[i])
@@ -69,7 +77,26 @@ export default{
     changeCurrentVideo (position) {
       if (this.videoList) {
         this.currentVideo = this.videoList[position]
+        this.reloadVideoSource(this.currentVideo.playUrl)
       }
+    },
+    prePage () {
+      if (this.pageList.length > 0) {
+        var prePageUrl = this.pageList.pop()
+        this.getData(prePageUrl)
+      }
+    },
+    nextPage () {
+      if (this.nextPageUrl) {
+        this.getData(this.nextPageUrl)
+      }
+    },
+    reloadVideoSource (playUrl) {
+      var player = document.getElementById('videoPlayer')
+      var videoSource = document.getElementById('videoSource')
+      player.pause()
+      videoSource.src = playUrl
+      player.load()
     }
   }
 }
@@ -128,7 +155,7 @@ export default{
     }
     .video-main{
         background: black;
-        height: 80%;
+        height: 85%;
         width: 80%;
         display: flex;
         justify-content: space-between;
@@ -151,6 +178,41 @@ export default{
     .video-info{
         background: white;
         flex:2;
+    }
+    .video-list{
+        display: flex;
+        flex-direction: column;
+    }
+    .page-control{
+        height: 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: stretch;
+    }
+    button.page-button {
+        flex: 1;
+        background: black;
+        color: white;
+        font-size: 1.2em;
+        border: none;
+        border-right: 1px solid #444;
+        -webkit-transition: background 0.2s;
+        -moz-transition: background 0.2s;
+        -ms-transition: background 0.2s;
+        transition: background 0.2s;
+    }
+    button.page-button:hover {
+        background: #353535;
+        cursor: pointer;
+    }
+    .video-info>h1 {
+        margin: 16px 10px;
+    }
+    .video-info>p {
+        margin: 0 10px;
+        line-height: 1.5em;
+        letter-spacing: 0.1em;
+        font-size: 1.2em;
     }
     .video-ul{
         height: 100%;
@@ -179,5 +241,13 @@ export default{
         text-decoration: none;
         padding: 1em;
         font-size: 1em;
+    }
+
+    video{
+      background:transparent 50% 50% no-repeat;
+      -webkit-background-size:cover;
+      -moz-background-size:cover;
+      -o-background-size:cover;
+      background-size:cover;
     }
 </style>
