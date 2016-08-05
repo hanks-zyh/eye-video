@@ -2,6 +2,8 @@
 
 > A Vue.js project
 
+![screen](https://github.com/hanks-zyh/eye-video/blob/master/screen/demo.png)
+
 ## Build Setup
 
 ``` bash
