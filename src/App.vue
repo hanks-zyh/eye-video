@@ -3,13 +3,13 @@
     <div class="video-main mdl-shadow--2dp">
       <div class="video-player">
         <div class="video-playing">
-          <video id="videoPlayer" style="background-image: url({{ currentVideo ? currentVideo.coverForFeed : '#' }});" controls poster="1.jpg">
+          <video id="videoPlayer" style="background-image: url({{ currentVideo.coverForFeed }});" controls poster="1.jpg">
             <source id="videoSource" src="" >
           </video>
         </div>
         <div class="video-info">
-          <h1>{{ currentVideo ?  currentVideo.title : 'title' }}</h1>
-          <p>{{ currentVideo ?  currentVideo.description : 'des' }}</p>
+          <h1>{{ currentVideo.title }}</h1>
+          <p>{{ currentVideo.description}}</p>
       </div>
       </div>
       <div class="video-list">
@@ -49,13 +49,13 @@ export default{
     }
   },
   ready () {
+    this.pageList.push(this.url)
     this.getData(this.url)
   },
   methods: {
     getData (url) {
       this.$http.get(url).then((response) => {
         var json = JSON.parse(response.body)
-        this.pageList.push(url)
         this.nextPageUrl = json.nextPageUrl
         var list = json.dailyList
         if (list.length > 0) {
@@ -82,12 +82,14 @@ export default{
     },
     prePage () {
       if (this.pageList.length > 0) {
-        var prePageUrl = this.pageList.pop()
+        this.pageList.pop()
+        var prePageUrl = this.pageList[this.pageList.length - 1]
         this.getData(prePageUrl)
       }
     },
     nextPage () {
       if (this.nextPageUrl) {
+        this.pageList.push(this.nextPageUrl)
         this.getData(this.nextPageUrl)
       }
     },
